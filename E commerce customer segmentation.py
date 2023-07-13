@@ -7,7 +7,6 @@ import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import silhouette_score
 from sklearn.cluster import KMeans
-from yellowbrick.cluster import KElbowVisualizer
 import streamlit as st
 #st.write("hh")
 
@@ -35,8 +34,6 @@ sns.countplot(data=df,x='Gender')
 plt.suptitle("Gender Count Graph")
 #plt.show()
 
-#df.iloc[:,2:].hist(figsize=(40,30))
-#plt.show()
 
 plt.figure(figsize = (15,5))
 plt.subplot(1,2,1)
@@ -57,8 +54,8 @@ def dist_list(lst):
     sns.boxplot(data=df, x=df[col])
 dist_list(cols)
 
-#plt.draw()
-##Heatmap of above 2 column
+
+##Heatmap
 plt.figure(figsize=(20,15))
 plt.suptitle("Heatmap")
 sns.heatmap(df.iloc[:,3: ].corr())
@@ -73,36 +70,17 @@ st.subheader("Total Searches")
 new_df['Total_Search'] = new_df.iloc[:,3:].sum(axis=1)
 st.write(new_df.sort_values('Total_Search',ascending = False))
 
-
 ##Scaling
+st.subheader("Scaling")
 x = df.iloc[:,2:].values
-#x
+st.write(x)
 scale = MinMaxScaler()
 features = scale.fit_transform(x)
-#features
+st.write(features)
 
-##Elbow Method to get optimal K value
-inertia = []
-for i in range(1, 16):
-  k_means = KMeans(n_clusters=i)
-  k_means = k_means.fit(features)
-  inertia.append(k_means.inertia_)
 
-# elbow graph
-plt.figure(figsize=(20,7))
-plt.subplot(1,2,1)
-plt.plot(range(1,16), inertia, 'bo-')
-plt.xlabel('No of clusters'), plt.ylabel('Inertia')
-
-# Kelbow visualizer
-plt.subplot(1,2,2)
-kmeans = KMeans()
-visualize = KElbowVisualizer(kmeans,k=(1,16))
-visualize.fit(features)
-plt.suptitle("Elbow Graph and Elbow Visualizer")
-visualize.poof()
-#plt.show()
-
+st.write("hh")
+'''
 ##Silhouette Score for each k value
 silhouette_avg = []
 for i in range(2, 16):
@@ -111,80 +89,84 @@ for i in range(2, 16):
   cluster_labels = kmeans.fit_predict(features)
   #silhouette Score
   silhouette_avg.append(silhouette_score(features, cluster_labels))
-#     
-#
+
 plt.figure(figsize=(10,7))
 plt.plot(range(2,16),silhouette_avg, 'bx-')
 plt.xlabel('Values of K')
 plt.ylabel('Silhouette Score')
 plt.title('Silhouette analysis for optimal K')
-#plt.show()
+plt.show()
+'''
+st.write("hh")
+
 ##K-means Model
 model = KMeans(n_clusters=3)
 model = model.fit(features)
-#     
-
-y_km = model.predict(features)
+     
+cm = model.predict(features)
 centers = model.cluster_centers_
-#     
-#
-df['Cluster'] = pd.DataFrame(y_km)
-df.to_csv('Cluster_data', index=False)
-#     
-#
-df['Cluster'].value_counts()
-sns.countplot(data = df, x = 'Cluster')
-#plt.show()
-##Analyzing Clusters
+
+#creating cluster
+new_df['Cluster'] = pd.DataFrame(cm)
+new_df.to_csv('Cluster_data', index=False)
+
+new_df['Cluster'].value_counts()
+sns.countplot(data = new_df, x = 'Cluster')
+
+##Analyzing Clusters 
 c_df = pd.read_csv('Cluster_data')
-c_df.head()
-##Analyzing Cluster 0
+
+##Analyzing Cluster 0 customer count and total searches graph
+st.subheader("Cluster 0 data")
 cl_0 = c_df.groupby(['Cluster', 'Gender'], as_index=False).sum().query('Cluster == 0')
 cl_0
 plt.figure(figsize = (15,6))
 plt.subplot(1,2,1)
 sns.countplot(data = c_df.query('Cluster == 0'), x = 'Gender')
 plt.title('Customers Count')
-#
+
 plt.subplot(1,2,2)
 sns.barplot(data = cl_0, x = 'Gender', y = 'Total_Search')
 plt.title('Total Searchs by Gender')
-plt.suptitle('No. of Customers and their TOtal Searches in "Cluster 0"')
-#plt.show()
-##Analyzing Cluster 1
+plt.suptitle('No. of Customers and their Total Searches in "Cluster 0"')
+
+##Analyzing Cluster 1 customer count and total searches graph
+st.subheader("Cluster 1 data")
 cl_1 = c_df.groupby(['Cluster', 'Gender'], as_index=False).sum().query('Cluster == 1')
+cl_1
 plt.figure(figsize = (15,6))
 plt.subplot(1,2,1)
 sns.countplot(data = c_df.query('Cluster == 1'), x = 'Gender')
 plt.title('Customers Count')
-#
+
 plt.subplot(1,2,2)
 sns.barplot(data = cl_1, x = 'Gender', y = 'Total_Search')
 plt.title('Total Searchs by Gender')
-plt.suptitle('No. of Customers and their TOtal Searches in "Cluster 1"')
-plt.show()
-## Analyzing Cluster 2 
+plt.suptitle('No. of Customers and their Total Searches in "Cluster 1"')
+
+## Analyzing Cluster 2 customer count and total searches graph
+st.subheader("Cluster 2 data")
 cl_2 = c_df.groupby(['Cluster', 'Gender'], as_index=False).sum().query('Cluster == 2')
 cl_2
 plt.figure(figsize = (15,6))
 plt.subplot(1,2,1)
 sns.countplot(data = c_df.query('Cluster == 2'), x = 'Gender')
 plt.title('Customers Count')
-#
+
 plt.subplot(1,2,2)
 sns.barplot(data = cl_2, x = 'Gender', y = 'Total_Search')
 plt.title('Total Searchs by Gender')
-plt.suptitle('No. of Customers and their TOtal Searches in "Cluster 2"')
-#plt.show()
+plt.suptitle('No. of Customers and their Total Searches in "Cluster 2"')
+
 final_df = c_df.groupby(['Cluster'], as_index = False).sum()
-final_df
+
+#final data
 plt.figure(figsize = (15,6))
 sns.countplot(data = c_df, x='Cluster', hue = 'Gender')
 plt.title('Total Customers on each Cluster')
-#plt.show()
 plt.figure(figsize = (15,6))
 plt.subplot(1,2,1)
-sns.barplot(data = final_df, x = 'Cluster#' , y = 'Total_Search')
+sns.barplot(data = final_df, x = 'Cluster' , y = 'Total_Search')
 plt.title('Total Searches by each group')
 
 plt.subplot(1,2,2)
@@ -192,3 +174,17 @@ sns.barplot(data=final_df,x='Cluster',y='Orders')
 plt.title('Past Orders by Each Group')
 plt.suptitle('No. of times Customers Searched the products and their past Orders')
 plt.show()
+
+
+
+
+
+     
+
+    
+
+
+     
+
+
+
